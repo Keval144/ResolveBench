@@ -1,0 +1,13 @@
+dnsbench
+dnsbench.exe
+*.test
+*.test.exe
+coverage.out
+coverage.html
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
