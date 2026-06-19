@@ -6,9 +6,20 @@ import (
 	"resolvebench/internal/dns"
 )
 
+var resolveBenchArt = TitleStyle.Render(
+	" 888888ba                             dP                    888888ba                             dP       \n" +
+	" 88    `8b                            88                    88    `8b                            88       \n" +
+	"a88aaaa8P' .d8888b. .d8888b. .d8888b. 88 dP   .dP .d8888b. a88aaaa8P' .d8888b. 88d888b. .d8888b. 88d888b. \n" +
+	" 88   `8b. 88ooood8 Y8ooooo. 88'  `88 88 88   d8' 88ooood8  88   `8b. 88ooood8 88'  `88 88'  `\"\" 88'  `88 \n" +
+	" 88     88 88.  ...       88 88.  .88 88 88 .88'  88.  ...  88    .88 88.  ... 88    88 88.  ... 88    88 \n" +
+	" dP     dP `88888P' `88888P' `88888P' dP 8888P'   `88888P'  88888888P `88888P' dP    dP `88888P' dP    dP \n" +
+	"                                                                                                           \n" +
+	"                                                                                                           ",
+)
+
 func welcomeView() string {
 	var b strings.Builder
-	b.WriteString(TitleStyle.Render("ResolveBench"))
+	b.WriteString(resolveBenchArt)
 	b.WriteString("\n")
 	b.WriteString(SubtitleStyle.Render("Benchmark & Compare DNS Providers"))
 	b.WriteString("\n")
@@ -38,8 +49,8 @@ func welcomeView() string {
 
 func (m *Model) runningView() string {
 	var b strings.Builder
-	b.WriteString(TitleStyle.Render("ResolveBench"))
-	b.WriteString("\n\n")
+	b.WriteString(resolveBenchArt)
+	b.WriteString("\n")
 
 	totalDNS := len(dns.Providers) * len(dns.BenchDomains)
 	currentDNS := m.progress
@@ -90,7 +101,7 @@ func progressBar(current, total, width int) string {
 func (m *Model) resultsView() string {
 	tfmt := "%-2s %-14s %10s %10s %10s %8s %5s"
 	var b strings.Builder
-	b.WriteString(TitleStyle.Render("ResolveBench"))
+	b.WriteString(resolveBenchArt)
 	b.WriteString("\n")
 	b.WriteString(SubtitleStyle.Render("DNS Benchmark Results"))
 	b.WriteString("\n\n")
@@ -159,7 +170,7 @@ func (m *Model) networkView() string {
 	tfmt := "%-18s %12s %14s"
 	sep := strings.Repeat("─", 46)
 	var b strings.Builder
-	b.WriteString(TitleStyle.Render("ResolveBench"))
+	b.WriteString(resolveBenchArt)
 	b.WriteString("\n")
 	b.WriteString(SubtitleStyle.Render("Network Latency Tests"))
 	b.WriteString("\n\n")
