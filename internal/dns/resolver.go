@@ -2,7 +2,6 @@ package dns
 
 import (
 	"context"
-	"log"
 	"net"
 	"sort"
 	"sync"
@@ -19,39 +18,49 @@ type LookupResult struct {
 	Error   error
 }
 
-func ResolveDomain(domain, dnsServer string) LookupResult {
+func ResolveDomain(ctx context.Context, domain, dnsServer string) LookupResult {
 	r := &net.Resolver{
 		PreferGo: true,
-		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+		Dial: func(dialCtx context.Context, network, address string) (net.Conn, error) {
 			d := net.Dialer{Timeout: resolveTimeout}
-			return d.DialContext(ctx, "udp", dnsServer+":53")
+			return d.DialContext(dialCtx, "udp", dnsServer+":53")
 		},
 	}
 
 	start := time.Now()
-	_, err := r.LookupHost(context.Background(), domain)
+	_, err := r.LookupHost(ctx, domain)
 	elapsed := time.Since(start)
 
 	if err != nil {
-		log.Printf("DNS lookup failed for %s via %s: %v", domain, dnsServer, err)
 		return LookupResult{Latency: elapsed, OK: false, Error: err}
 	}
 	return LookupResult{Latency: elapsed, OK: true}
 }
 
-func BatchResolve(domain, dnsServer string, count int, workers int) []LookupResult {
+func BatchResolve(ctx context.Context, domain, dnsServer string, count int, workers int) []LookupResult {
 	results := make([]LookupResult, count)
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, workers)
 
 	for i := range count {
+		select {
+		case <-ctx.Done():
+			wg.Wait()
+			return results
+		default:
+		}
+
 		wg.Add(1)
 		go func(idx int) {
 			defer wg.Done()
-			sem <- struct{}{}
+			select {
+			case sem <- struct{}{}:
+			case <-ctx.Done():
+				return
+			}
 			defer func() { <-sem }()
-			r := ResolveDomain(domain, dnsServer)
+			r := ResolveDomain(ctx, domain, dnsServer)
 			mu.Lock()
 			results[idx] = r
 			mu.Unlock()
@@ -75,9 +84,18 @@ func ComputeStats(domain string, results []LookupResult) DomainStats {
 	success := 0
 
 	for _, r := range results {
-		lats = append(lats, r.Latency)
 		if r.OK {
+			lats = append(lats, r.Latency)
 			success++
+		}
+	}
+
+	rate := (float64(success) / float64(len(results))) * 100
+
+	if len(lats) == 0 {
+		return DomainStats{
+			Domain:      domain,
+			SuccessRate: rate,
 		}
 	}
 
@@ -90,14 +108,9 @@ func ComputeStats(domain string, results []LookupResult) DomainStats {
 		totalNs += l.Nanoseconds()
 	}
 
-	denom := len(lats)
-	if denom < 1 {
-		denom = 1
-	}
-	avg := time.Duration(totalNs / int64(denom))
+	avg := time.Duration(totalNs / int64(len(lats)))
 	min := lats[0]
 	max := lats[len(lats)-1]
-	rate := (float64(success) / float64(len(results))) * 100
 
 	return DomainStats{
 		Domain:      domain,

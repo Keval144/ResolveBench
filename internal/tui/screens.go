@@ -2,19 +2,19 @@ package tui
 
 import (
 	"fmt"
-	"strings"
 	"resolvebench/internal/dns"
+	"strings"
 )
 
 var resolveBenchArt = TitleStyle.Render(
 	" 888888ba                             dP                    888888ba                             dP       \n" +
-	" 88    `8b                            88                    88    `8b                            88       \n" +
-	"a88aaaa8P' .d8888b. .d8888b. .d8888b. 88 dP   .dP .d8888b. a88aaaa8P' .d8888b. 88d888b. .d8888b. 88d888b. \n" +
-	" 88   `8b. 88ooood8 Y8ooooo. 88'  `88 88 88   d8' 88ooood8  88   `8b. 88ooood8 88'  `88 88'  `\"\" 88'  `88 \n" +
-	" 88     88 88.  ...       88 88.  .88 88 88 .88'  88.  ...  88    .88 88.  ... 88    88 88.  ... 88    88 \n" +
-	" dP     dP `88888P' `88888P' `88888P' dP 8888P'   `88888P'  88888888P `88888P' dP    dP `88888P' dP    dP \n" +
-	"                                                                                                           \n" +
-	"                                                                                                           ",
+		" 88    `8b                            88                    88    `8b                            88       \n" +
+		"a88aaaa8P' .d8888b. .d8888b. .d8888b. 88 dP   .dP .d8888b. a88aaaa8P' .d8888b. 88d888b. .d8888b. 88d888b. \n" +
+		" 88   `8b. 88ooood8 Y8ooooo. 88'  `88 88 88   d8' 88ooood8  88   `8b. 88ooood8 88'  `88 88'  `\"\" 88'  `88 \n" +
+		" 88     88 88.  ...       88 88.  .88 88 88 .88'  88.  ...  88    .88 88.  ... 88    88 88.  ... 88    88 \n" +
+		" dP     dP `88888P' `88888P' `88888P' dP 8888P'   `88888P'  88888888P `88888P' dP    dP `88888P' dP    dP \n" +
+		"                                                                                                           \n" +
+		"                                                                                                           ",
 )
 
 func welcomeView() string {
@@ -90,6 +90,9 @@ func progressBar(current, total, width int) string {
 	if total == 0 {
 		return ""
 	}
+	if current < 0 {
+		current = 0
+	}
 	filled := int(float64(current) / float64(total) * float64(width))
 	if filled > width {
 		filled = width
@@ -137,11 +140,15 @@ func (m *Model) resultsView() string {
 	b.WriteString("\n")
 	b.WriteString(BorderStyle.Render(m.recommendationView()))
 	b.WriteString("\n\n")
-	b.WriteString(DimStyle.Render("Enter — Network Tests  ·  Space — Restart  ·  q — Quit"))
+	b.WriteString(DimStyle.Render("Enter — Network Tests  ·  Space — Restart Now  ·  q — Quit"))
 	return b.String()
 }
 
 func (m *Model) recommendationView() string {
+	return m.renderRecommendation()
+}
+
+func (m *Model) renderRecommendation() string {
 	if len(m.results) < 2 {
 		return "Insufficient data for recommendations"
 	}
@@ -167,8 +174,8 @@ func (m *Model) recommendationView() string {
 }
 
 func (m *Model) networkView() string {
-	tfmt := "%-18s %12s %14s"
-	sep := strings.Repeat("─", 46)
+	tfmt := "%-3s %-18s %12s %14s"
+	sep := strings.Repeat("─", 50)
 	var b strings.Builder
 	b.WriteString(resolveBenchArt)
 	b.WriteString("\n")
@@ -176,13 +183,14 @@ func (m *Model) networkView() string {
 	b.WriteString("\n\n")
 
 	b.WriteString(TableHeader.Render(fmt.Sprintf(tfmt,
-		"Target", "Latency", "Status",
+		"#", "Target", "Latency", "Status",
 	)))
 	b.WriteString("\n")
 	b.WriteString(DimStyle.Render(sep))
 	b.WriteString("\n")
 
-	for _, r := range m.networkRezs {
+	for i, r := range m.networkRezs {
+		rank := fmt.Sprintf("%d.", i+1)
 		status := "✓ reachable"
 		style := SuccessStyle
 		if !r.Reachable {
@@ -193,34 +201,17 @@ func (m *Model) networkView() string {
 		if !r.Reachable {
 			latency = "-"
 		}
-		line := fmt.Sprintf(tfmt, r.Target, latency, status)
+		line := fmt.Sprintf(tfmt, rank, r.Target, latency, status)
 		b.WriteString(style.Render(line))
 		b.WriteString("\n")
 	}
 
 	if len(m.results) >= 2 {
 		b.WriteString("\n")
-		primary := m.results[0]
-		secondary := m.results[1]
-
-		var summary strings.Builder
-		summary.WriteString(PrimaryStyle.Render(fmt.Sprintf("  ★ Primary DNS:   %s (%s)", primary.Name, primary.PrimaryDNS)))
-		summary.WriteString("\n")
-		summary.WriteString(fmt.Sprintf("     Use Case: %s\n", DimStyle.Render(primary.UseCase)))
-		summary.WriteString(fmt.Sprintf("     Latency:  %s  |  Success: %.0f%%",
-			formatDur(primary.AvgLatency), primary.OverallRate))
-		summary.WriteString("\n\n")
-		summary.WriteString(SecondaryStyle.Render(fmt.Sprintf("  ◆ Secondary DNS: %s (%s)", secondary.Name, secondary.SecondaryDNS)))
-		summary.WriteString("\n")
-		summary.WriteString(fmt.Sprintf("     Use Case: %s\n", DimStyle.Render(secondary.UseCase)))
-		summary.WriteString(fmt.Sprintf("     Latency:  %s  |  Success: %.0f%%",
-			formatDur(secondary.AvgLatency), secondary.OverallRate))
-		b.WriteString(BorderStyle.Render(summary.String()))
+		b.WriteString(BorderStyle.Render(m.renderRecommendation()))
 	}
 
 	b.WriteString("\n\n")
-	b.WriteString(DimStyle.Render("Enter — Back to Results  ·  Space — Restart  ·  q — Quit"))
+	b.WriteString(DimStyle.Render("Enter — Back to Results  ·  Space — Restart Now  ·  q — Quit"))
 	return b.String()
 }
-
-

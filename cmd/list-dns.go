@@ -21,6 +21,8 @@ var listDNSCmd = &cobra.Command{
 		for _, p := range dns.Providers {
 			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", p.Name, p.PrimaryDNS, p.SecondaryDNS, p.UseCase)
 		}
-		w.Flush()
+		if err := w.Flush(); err != nil {
+			fmt.Fprintf(os.Stderr, "error flushing output: %v\n", err)
+		}
 	},
 }

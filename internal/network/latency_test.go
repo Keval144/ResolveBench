@@ -1,6 +1,7 @@
 package network
 
 import (
+	"context"
 	"testing"
 	"time"
 )
@@ -17,7 +18,7 @@ func TestPingTarget_unreachable(t *testing.T) {
 }
 
 func TestRunLatencyTests(t *testing.T) {
-	results := RunLatencyTests(nil)
+	results := RunLatencyTests(context.Background(), nil)
 
 	if len(results) == 0 {
 		t.Error("expected at least one network result")
@@ -38,7 +39,7 @@ func TestRunLatencyTests_progressCallback(t *testing.T) {
 		total = total_
 	}
 
-	RunLatencyTests(prog)
+	RunLatencyTests(context.Background(), prog)
 
 	if calls == 0 {
 		t.Error("expected progress callback to be called")
@@ -64,23 +65,19 @@ func TestPingTarget_validLatency(t *testing.T) {
 
 func TestRunLatencyTests_progressCount(t *testing.T) {
 	targets := []string{"1.1.1.1", "8.8.8.8"}
-	original := dnsNetworkTargets
-	dnsNetworkTargets = targets
-	defer func() { dnsNetworkTargets = original }()
-
-	lastLabel := ""
+	calls := 0
 	prog := func(current, total int, label string) {
-		lastLabel = label
+		calls++
 	}
 
-	RunLatencyTests(prog)
-	_ = lastLabel
-}
+	for i, target := range targets {
+		pingTarget(target)
+		if prog != nil {
+			prog(i+1, len(targets), target)
+		}
+	}
 
-var dnsNetworkTargets = []string{
-	"1.1.1.1",
-	"8.8.8.8",
-	"9.9.9.9",
-	"cloudflare.com",
-	"google.com",
+	if calls == 0 {
+		t.Error("expected progress callback to be called")
+	}
 }

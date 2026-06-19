@@ -1,9 +1,11 @@
 package dns
 
 import (
+	"context"
 	"math"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"resolvebench/internal/models"
@@ -12,25 +14,35 @@ import (
 const (
 	lookupsPerDomain  = 10
 	concurrentWorkers = 5
+	latencyWeight     = 30.0
+	reliabilityWeight = 60.0
+	consistencyWeight = 10.0
 )
 
 type progressFn func(current, total int, label string)
 
-func RunBenchmark(prog progressFn) []models.ProviderResult {
+func RunBenchmark(ctx context.Context, prog progressFn) []models.ProviderResult {
 	results := make([]models.ProviderResult, len(Providers))
 	var mu sync.Mutex
 	var wg sync.WaitGroup
 	totalTasks := len(Providers) * len(BenchDomains)
-	taskCount := 0
+	var taskCount atomic.Int64
 
 	for pi, provider := range Providers {
+		select {
+		case <-ctx.Done():
+			wg.Wait()
+			return results
+		default:
+		}
+
 		wg.Add(1)
 		go func(idx int, p Provider) {
 			defer wg.Done()
 			domains := make([]models.DomainResult, len(BenchDomains))
 
 			for di, domain := range BenchDomains {
-				lookups := BatchResolve(domain, p.PrimaryDNS, lookupsPerDomain, concurrentWorkers)
+				lookups := BatchResolve(ctx, domain, p.PrimaryDNS, lookupsPerDomain, concurrentWorkers)
 				stats := ComputeStats(domain, lookups)
 
 				domains[di] = models.DomainResult{
@@ -42,12 +54,10 @@ func RunBenchmark(prog progressFn) []models.ProviderResult {
 					SuccessRate: stats.SuccessRate,
 				}
 
-				mu.Lock()
-				taskCount++
+				count := taskCount.Add(1)
 				if prog != nil {
-					prog(taskCount, totalTasks, p.Name)
+					prog(int(count), totalTasks, p.Name)
 				}
-				mu.Unlock()
 			}
 
 			var totalAvg int64
@@ -105,13 +115,13 @@ func scoreResults(results []models.ProviderResult) {
 		r := &results[i]
 		latencyScore := 0.0
 		if maxAvgNs > 0 {
-			latencyScore = (1 - float64(r.AvgLatency.Nanoseconds())/maxAvgNs) * 40
+			latencyScore = (1 - float64(r.AvgLatency.Nanoseconds())/maxAvgNs) * latencyWeight
 		}
-		reliabilityScore := (r.OverallRate / 100) * 40
+		reliabilityScore := (r.OverallRate / 100) * reliabilityWeight
 		consistencyScore := 0.0
 		if maxLatencyNs > 0 {
 			variation := float64(r.MaxLatency.Nanoseconds()-r.MinLatency.Nanoseconds()) / maxLatencyNs
-			consistencyScore = (1 - variation) * 20
+			consistencyScore = (1 - variation) * consistencyWeight
 		}
 		r.Score = math.Round(latencyScore+reliabilityScore+consistencyScore*100) / 100
 	}

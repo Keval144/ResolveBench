@@ -38,5 +38,3 @@ type NetworkResult struct {
 	Latency   time.Duration
 	Reachable bool
 }
-
-

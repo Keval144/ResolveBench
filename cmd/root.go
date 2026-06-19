@@ -14,7 +14,7 @@ var rootCmd = &cobra.Command{
 	Use:   "resolvebench",
 	Short: "DNS benchmark tool with TUI",
 	Long: `ResolveBench benchmarks different DNS providers to help you find
-the lowest-latency DNS for optimal routing.
+the fastest, most reliable DNS resolver for your network.
 
 It tests Cloudflare, Google DNS, Quad9, AdGuard DNS, and OpenDNS
 by resolving popular domains and computing latency, reliability, and consistency scores.`,

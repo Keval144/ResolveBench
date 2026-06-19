@@ -1,6 +1,6 @@
 {
   "name": "resolvebench",
-  "version": "1.0.1",
+  "version": "2.1.0",
   "description": "Benchmark & compare DNS providers to find the fastest, most reliable DNS for your network",
   "bin": {
     "resolvebench": "cli.js"
@@ -19,6 +19,12 @@
     "go.mod",
     "go.sum"
   ],
-  "keywords": ["dns", "benchmark", "speed", "latency", "dns-benchmark"],
+  "keywords": [
+    "dns",
+    "benchmark",
+    "speed",
+    "latency",
+    "dns-benchmark"
+  ],
   "license": "MIT"
 }

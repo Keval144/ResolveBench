@@ -1,12 +1,12 @@
 package tui
 
 import (
+	"context"
 	"fmt"
-	"sync"
-	"time"
 	"resolvebench/internal/dns"
 	"resolvebench/internal/models"
 	"resolvebench/internal/network"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -31,8 +31,8 @@ type Model struct {
 	networkRezs []models.NetworkResult
 	width       int
 	height      int
-	err         error
-	mu          sync.Mutex
+	ctx         context.Context
+	cancel      context.CancelFunc
 }
 
 func NewModel() Model {
@@ -55,28 +55,32 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.Type {
 		case tea.KeyEnter:
 			if m.screen == models.WelcomeScreen {
-				m.screen = models.RunningScreen
-				m.progress = 0
-				m.totalTasks()
-				go m.runAll()
+				m.startBenchmark()
 				return m, nil
 			}
 			if m.screen == models.ResultsScreen {
 				m.screen = models.NetworkScreen
 				return m, nil
 			}
-		if m.screen == models.NetworkScreen {
-			m.screen = models.ResultsScreen
-			return m, nil
-		}
+			if m.screen == models.NetworkScreen {
+				m.screen = models.ResultsScreen
+				return m, nil
+			}
 		case tea.KeySpace:
 			if m.screen == models.ResultsScreen || m.screen == models.NetworkScreen {
-				m.screen = models.WelcomeScreen
+				m.startBenchmark()
+				return m, nil
 			}
 		case tea.KeyEscape, tea.KeyCtrlC:
+			if m.cancel != nil {
+				m.cancel()
+			}
 			return m, tea.Quit
 		case tea.KeyRunes:
 			if string(msg.Runes) == "q" {
+				if m.cancel != nil {
+					m.cancel()
+				}
 				return m, tea.Quit
 			}
 		}
@@ -98,6 +102,19 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+func (m *Model) startBenchmark() {
+	if m.cancel != nil {
+		m.cancel()
+	}
+	m.ctx, m.cancel = context.WithCancel(context.Background())
+	m.screen = models.RunningScreen
+	m.progress = 0
+	m.results = nil
+	m.networkRezs = nil
+	m.totalTasks()
+	go m.runAll()
+}
+
 func (m *Model) totalTasks() {
 	m.progressMax = len(dns.Providers)*len(dns.BenchDomains) + len(dns.NetworkTargets)
 }
@@ -112,13 +129,13 @@ func (m *Model) runAll() {
 		}
 	}
 
-	results := dns.RunBenchmark(func(current, total int, label string) {
+	results := dns.RunBenchmark(m.ctx, func(current, total int, label string) {
 		prog(current, "DNS: "+label)
 	})
 
 	prog(netOffset, "Network tests")
 
-	netResults := network.RunLatencyTests(func(current, total int, label string) {
+	netResults := network.RunLatencyTests(m.ctx, func(current, total int, label string) {
 		prog(netOffset+current, "Net: "+label)
 	})
 
@@ -144,7 +161,7 @@ func (m *Model) View() string {
 
 func formatDur(d time.Duration) string {
 	if d < time.Millisecond {
-		return fmt.Sprintf("%.2fµs", float64(d.Microseconds()))
+		return fmt.Sprintf("%.2fµs", float64(d)/float64(time.Microsecond))
 	}
-	return fmt.Sprintf("%.2fms", float64(d.Milliseconds()))
+	return fmt.Sprintf("%.2fms", float64(d)/float64(time.Millisecond))
 }
