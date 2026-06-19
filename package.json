@@ -1,9 +1,9 @@
 {
   "name": "resolvebench",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Benchmark & compare DNS providers to find the fastest, most reliable DNS for your network",
   "bin": {
-    "resolvebench": "resolvebench"
+    "resolvebench": "cli.js"
   },
   "scripts": {
     "postinstall": "go build -o resolvebench .",
@@ -12,6 +12,7 @@
     "clean": "rm -f resolvebench"
   },
   "files": [
+    "cli.js",
     "main.go",
     "cmd/",
     "internal/",
