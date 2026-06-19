@@ -1,6 +1,6 @@
 package main
 
-import "dnsbench/cmd"
+import "resolvebench/cmd"
 
 func main() {
 	cmd.Execute()

@@ -3,8 +3,8 @@ package network
 import (
 	"net"
 	"time"
-	"dnsbench/internal/models"
-	"dnsbench/internal/dns"
+	"resolvebench/internal/models"
+	"resolvebench/internal/dns"
 )
 
 func RunLatencyTests(prog func(current, total int, label string)) []models.NetworkResult {

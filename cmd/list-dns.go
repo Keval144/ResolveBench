@@ -5,7 +5,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"dnsbench/internal/dns"
+	"resolvebench/internal/dns"
 
 	"github.com/spf13/cobra"
 )
@@ -13,7 +13,7 @@ import (
 var listDNSCmd = &cobra.Command{
 	Use:   "list-dns",
 	Short: "List available DNS providers",
-	Long:  "Display all DNS providers that DnsBench can benchmark.",
+	Long:  "Display all DNS providers that ResolveBench can benchmark.",
 	Run: func(cmd *cobra.Command, args []string) {
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 		fmt.Fprintln(w, "Provider\tPrimary DNS\tSecondary DNS\tUse Case")

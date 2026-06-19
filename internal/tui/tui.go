@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	"dnsbench/internal/dns"
-	"dnsbench/internal/models"
-	"dnsbench/internal/network"
+	"resolvebench/internal/dns"
+	"resolvebench/internal/models"
+	"resolvebench/internal/network"
 
 	tea "github.com/charmbracelet/bubbletea"
 )

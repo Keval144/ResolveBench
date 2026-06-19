@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"dnsbench/internal/models"
+	"resolvebench/internal/models"
 )
 
 func TestScoreResults_empty(t *testing.T) {

@@ -1,4 +1,4 @@
-# DnsBench
+# ResolveBench
 
 A cross-platform TUI application that benchmarks different DNS providers to help you find the lowest-latency DNS for optimal routing.
 
@@ -19,53 +19,29 @@ A cross-platform TUI application that benchmarks different DNS providers to help
 ## Installation
 
 ```bash
-git clone https://github.com/keval144/dnsbench.git
-cd dnsbench
-make build
+npm i -g resolvebench
 ```
 
-Or manually:
+Or manually (requires Go 1.22+):
 
 ```bash
-go mod tidy
-go build -o dnsbench
+git clone https://github.com/keval144/resolvebench.git
+cd resolvebench
+make build
 ```
 
 ## Usage
 
-### Start Benchmarking
-
 ```bash
-dnsbench bench
+# Run the benchmark TUI
+resolvebench
+
+# List available DNS providers
+resolvebench list-dns
+
+# Show help
+resolvebench -h
 ```
-
-### View Available DNS Servers
-
-```bash
-dnsbench list-dns
-```
-
-### Non-Interactive Mode
-
-```bash
-dnsbench bench --json
-```
-
-### Custom DNS Servers
-
-```bash
-dnsbench bench --dns 1.1.1.1,8.8.8.8
-```
-
-## UI Flow
-
-1. **Welcome Screen**: App introduction with providers listed
-2. **Run Test**: Press Enter to start benchmarking
-3. **Progress Display**: Real-time progress bar with provider labels
-4. **Results Dashboard**: Sorted table with Avg/Min/Max latency, success rate, score
-5. **Network Tests**: TCP ping results for selected targets
-6. **Recommendations**: Primary and secondary DNS suggestions
-
 ## DNS Providers Tested
 
 | Provider | Primary | Secondary | Use Case |

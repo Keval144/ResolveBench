@@ -1,5 +1,5 @@
-dnsbench
-dnsbench.exe
+resolvebench
+resolvebench.exe
 *.test
 *.test.exe
 coverage.out

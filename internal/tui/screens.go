@@ -3,12 +3,12 @@ package tui
 import (
 	"fmt"
 	"strings"
-	"dnsbench/internal/dns"
+	"resolvebench/internal/dns"
 )
 
 func welcomeView() string {
 	var b strings.Builder
-	b.WriteString(TitleStyle.Render("DnsBench"))
+	b.WriteString(TitleStyle.Render("ResolveBench"))
 	b.WriteString("\n")
 	b.WriteString(SubtitleStyle.Render("Benchmark & Compare DNS Providers"))
 	b.WriteString("\n")
@@ -38,7 +38,7 @@ func welcomeView() string {
 
 func (m *Model) runningView() string {
 	var b strings.Builder
-	b.WriteString(TitleStyle.Render("DnsBench"))
+	b.WriteString(TitleStyle.Render("ResolveBench"))
 	b.WriteString("\n\n")
 
 	totalDNS := len(dns.Providers) * len(dns.BenchDomains)
@@ -90,7 +90,7 @@ func progressBar(current, total, width int) string {
 func (m *Model) resultsView() string {
 	tfmt := "%-2s %-14s %10s %10s %10s %8s %5s"
 	var b strings.Builder
-	b.WriteString(TitleStyle.Render("DnsBench"))
+	b.WriteString(TitleStyle.Render("ResolveBench"))
 	b.WriteString("\n")
 	b.WriteString(SubtitleStyle.Render("DNS Benchmark Results"))
 	b.WriteString("\n\n")
@@ -159,7 +159,7 @@ func (m *Model) networkView() string {
 	tfmt := "%-18s %12s %14s"
 	sep := strings.Repeat("─", 46)
 	var b strings.Builder
-	b.WriteString(TitleStyle.Render("DnsBench"))
+	b.WriteString(TitleStyle.Render("ResolveBench"))
 	b.WriteString("\n")
 	b.WriteString(SubtitleStyle.Render("Network Latency Tests"))
 	b.WriteString("\n\n")

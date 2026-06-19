@@ -1,0 +1,23 @@
+{
+  "name": "resolvebench",
+  "version": "1.0.0",
+  "description": "Benchmark & compare DNS providers to find the fastest, most reliable DNS for your network",
+  "bin": {
+    "resolvebench": "resolvebench"
+  },
+  "scripts": {
+    "postinstall": "go build -o resolvebench .",
+    "build": "go build -o resolvebench .",
+    "test": "go test ./...",
+    "clean": "rm -f resolvebench"
+  },
+  "files": [
+    "main.go",
+    "cmd/",
+    "internal/",
+    "go.mod",
+    "go.sum"
+  ],
+  "keywords": ["dns", "benchmark", "speed", "latency", "dns-benchmark"],
+  "license": "MIT"
+}

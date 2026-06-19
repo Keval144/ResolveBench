@@ -4,19 +4,29 @@ import (
 	"fmt"
 	"os"
 
+	"resolvebench/internal/tui"
+
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "dnsbench",
+	Use:   "resolvebench",
 	Short: "DNS benchmark tool with TUI",
-	Long: `DnsBench benchmarks different DNS providers to help you find
+	Long: `ResolveBench benchmarks different DNS providers to help you find
 the lowest-latency DNS for optimal routing.
 
 It tests Cloudflare, Google DNS, Quad9, AdGuard DNS, and OpenDNS
 by resolving popular domains and computing latency, reliability, and consistency scores.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+	RunE: func(cmd *cobra.Command, args []string) error {
+		m := tui.NewModel()
+		p := tea.NewProgram(&m, tea.WithAltScreen())
+		m.Program = p
+
+		if _, err := p.Run(); err != nil {
+			return err
+		}
+		return nil
 	},
 }
 
@@ -28,6 +38,5 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.AddCommand(benchCmd)
 	rootCmd.AddCommand(listDNSCmd)
 }

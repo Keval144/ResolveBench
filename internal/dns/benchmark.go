@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"dnsbench/internal/models"
+	"resolvebench/internal/models"
 )
 
 const (
@@ -82,28 +82,6 @@ func RunBenchmark(prog progressFn) []models.ProviderResult {
 
 	scoreResults(results)
 	sortResults(results)
-	return results
-}
-
-func RunBenchmarkCustom(customServers []string, prog progressFn) []models.ProviderResult {
-	providers := Providers
-	if len(customServers) > 0 {
-		providers = make([]Provider, len(customServers))
-		for i, s := range customServers {
-			providers[i] = Provider{
-				Name:        s,
-				PrimaryDNS:  s,
-				SecondaryDNS: s,
-				UseCase:     "Custom",
-				Description: "User-specified DNS server",
-			}
-		}
-	}
-
-	original := Providers
-	Providers = providers
-	results := RunBenchmark(prog)
-	Providers = original
 	return results
 }
 

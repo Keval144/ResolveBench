@@ -1,4 +1,4 @@
-BINARY ?= dnsbench
+BINARY ?= resolvebench
 GO ?= go
 
 .PHONY: build run test clean lint install fmt
