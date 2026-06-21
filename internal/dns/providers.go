@@ -57,6 +57,7 @@ var BenchDomains = []string{
 	"stackoverflow.com",
 	"youtube.com",
 	"openai.com",
+	"claude.ai",
 }
 
 var NetworkTargets = []string{
